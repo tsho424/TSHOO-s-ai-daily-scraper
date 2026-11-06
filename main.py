@@ -28,7 +28,7 @@ def ask_gemini(content):
         raise ValueError("找不到 GEMINI_API_KEY 密鑰！")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
 
     prompt = f"請幫我閱讀以下網頁內容，並整理出 3 個最重要的重點摘要：\n\n{content}"
     
