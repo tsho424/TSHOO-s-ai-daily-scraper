@@ -1,0 +1,1 @@
+# TSHOO-s-ai-daily-scraper
