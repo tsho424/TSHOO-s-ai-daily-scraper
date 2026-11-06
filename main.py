@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import google.generativeai as genai
 
 # 1. 設定要爬取的目標網址 (請替換成你想抓的網頁)
-TARGET_URL = "https://www.pcsh.ntpc.edu.tw/"
+TARGET_URL = "https://news.ycombinator.com/"
 
 def scrape_website():
     print(f"正在抓取網頁: {TARGET_URL}")
