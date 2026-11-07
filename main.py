@@ -23,9 +23,22 @@ def scrape_website():
     return text_content
 
 def check_keywords(content):
-    # 檢查內容中是否有包含任何指定的關鍵字
     found_keywords = [kw for kw in KEYWORDS if kw in content]
     return found_keywords
+
+def send_to_discord(message):
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if not webhook_url:
+        print("⚠️ 找不到 DISCORD_WEBHOOK_URL，跳過發送 Discord 通知。")
+        return
+    
+    # Discord 訊息若太長需做簡單切割或取前 2000 字
+    payload = {"content": message[:2000]}
+    response = requests.post(webhook_url, json=payload)
+    if response.status_code == 204:
+        print("✅ Discord 通知發送成功！")
+    else:
+        print(f"❌ Discord 通知發送失敗，錯誤碼: {response.status_code}")
 
 def ask_gemini(content, found_keywords):
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -33,10 +46,8 @@ def ask_gemini(content, found_keywords):
         raise ValueError("找不到 GEMINI_API_KEY，請確認 GitHub Secrets 是否設定正確。")
     
     genai.configure(api_key=api_key)
-    # 使用目前支援的模型
     model = genai.GenerativeModel('gemini-3.8-flash')
     
-    # 建立結合關鍵字的提示詞
     prompt = f"""
     以下是從學校網站抓取到的最新內容：
     {content[:8000]}
@@ -46,13 +57,19 @@ def ask_gemini(content, found_keywords):
     經過程式初步比對，本次網頁中出現了以下符合的關鍵字：{found_keywords if found_keywords else "無"}
 
     請根據上述內容幫我整理：
-    1. 如果有出現上述關鍵字，請在最上方用顯眼的格式「🔴 重點標註」特別摘要該活動、考試或公告的詳細時間與內容。
+    1. 如果有出現上述關鍵字, 請在最上方用顯眼的格式「🔴 重點標註」特別摘要該活動、考試或公告的詳細時間與內容。
     2. 提供整體網頁內容的簡要重點摘要。
     """
     
     response = model.generate_content(prompt)
+    ai_result = response.text
+    
     print("=== AI 分析與關鍵字提醒結果 ===")
-    print(response.text)
+    print(ai_result)
+    
+    # 將 AI 的結果包裝後發送到 Discord
+    discord_message = f"🔔 **每日學校公告 AI 摘要報告**\n{ai_result}"
+    send_to_discord(discord_message)
 
 if __name__ == "__main__":
     data = scrape_website()
